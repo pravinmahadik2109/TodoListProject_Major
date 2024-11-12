@@ -1,37 +1,41 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 
-export const CreateTask = ({ setTasks }) => {
-  // Local state for the new task
+export const CreateTask = ({setTasks}) => {
   const [name, setName] = useState('');
   const [details, setDetails] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  // Handle input changes for the task form
   const handleNameChange = (e) => setName(e.target.value);
   const handleDetailsChange = (e) => setDetails(e.target.value);
 
-  // Handle the task submission
-  const handleSubmit = (e) => {
-    e.preventDefault(); // Prevent page reload on form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    console.log("HandleSubmit Called");
 
     if (!name || !details) {
       alert('Please enter both a task name and details!');
       return;
     }
 
-    // Create a new task object
-    const newTask = {
-      id: Date.now(), // Use current timestamp as unique ID
-      name,
-      details,
-      done: false, // New tasks are not completed by default
-    };
+    const newTask = { name, details, done: false };
 
-    // Update the tasks state in the parent component
-    setTasks((prevTasks) => [...prevTasks, newTask]);
+    try {
+      setLoading(true);
+      const response = await axios.post("http://localhost:8080/addTask", newTask);
 
-    // Reset the form
-    setName('');
-    setDetails('');
+      // Update the task list in the parent if the request is successful
+      setTasks((prevTasks) => [...prevTasks, response.data]);
+      
+      // Clear the form fields
+      setName('');
+      setDetails('');
+    } catch (error) {
+      console.error("There was an error creating the task:", error);
+      alert("Failed to add task. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -58,7 +62,9 @@ export const CreateTask = ({ setTasks }) => {
             placeholder="Enter task details"
           />
         </div>
-        <button type="submit" className="btn btn-success my-2">Add Task</button>
+        <button type="submit" className="btn btn-success my-2" disabled={loading}>
+          {loading ? 'Adding...' : 'Add Task'}
+        </button>
       </form>
     </div>
   );

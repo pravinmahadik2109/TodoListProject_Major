@@ -1,45 +1,33 @@
-import React, { useState } from 'react';
-import { TodoList } from './TodoList';
+import React, { useState, useEffect } from 'react';
+import TodoList from './TodoList';
 import { TaskDetails } from './TaskDetails';
-import {EditTask}  from './EditTask';  // Make sure this is correctly imported
 import { CreateTask } from './CreateTask ';
+import axios from 'axios';
 
 export const App = () => {
-  const [tasks, setTasks] = useState([
-    { id: 1, name: 'Eat', details: 'Eat Less', done: false },
-    { id: 2, name: 'Read', details: 'Read More', done: false },
-    { id: 3, name: 'Sleep', details: 'Sleep Adequate', done: false }
-  ]);
-  const [taskDetails, setTaskDetails] = useState(false);
-  const [taskDetailsId, setTaskDetailsId] = useState(0);
-  const [editingTaskId, setEditingTaskId] = useState(0);  // Store the task ID being edited
+  const [tasks, setTasks] = useState([]);
 
-  // Find the task based on the ID to pass it to the EditTask component
-  const taskToEdit = tasks.find(task => task.id === editingTaskId);
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const response = await axios.get("http://localhost:8080/tasks");
+        setTasks(response.data); // Set tasks with the data from backend
+      } catch (error) {
+        console.error("Error fetching tasks:", error);
+      }
+    };
+
+    fetchTasks(); // Invoke the function to fetch tasks
+  }, []);
+  
+
 
   return (
     <div className="container text-center my-3">
-       <h1 className="text-danger">Welcome to DIEMS TodoList App</h1>
+      <h1 className="text-danger">Welcome to DIEMS TodoList App</h1>
       < CreateTask setTasks={setTasks} />
       {/* Render EditTask if a task is being edited */}
-
-      {editingTaskId !== 0 && (
-        <EditTask tasks={tasks} task={taskToEdit} setTasks={setTasks} setEditingTaskId={setEditingTaskId} />
-      )}
-      
-      {/* Conditionally render TaskDetails or TodoList */}
-      {taskDetails ? (
-        <TaskDetails tasks={tasks} taskDetails={setTaskDetails} taskDetailsId={taskDetailsId} />
-      ) : (
-        <TodoList
-          tasks={tasks}
-          taskDetails={setTaskDetails}
-          setTaskDetailsId={setTaskDetailsId}
-          setTasks={setTasks}
-          setEditingTaskId={setEditingTaskId}  // Pass down setEditingTaskId to TodoList
-        />
-      )}
-      
+      <TodoList  tasks ={tasks} setTasks={setTasks} />
     </div>
   );
 };
